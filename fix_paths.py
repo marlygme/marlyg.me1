@@ -10,17 +10,15 @@ def fix_readymag_paths(root_dir):
     """
     print("Starting to fix Readymag CDN paths in all files...")
 
-    # Regex to find two types of CDN links:
-    # 1. Image CDN: https://i-p.rmcdn.net/.../img/...
-    # 2. Scripts CDN: https://c-p.rmcdn1.net/.../dist/...
-    # It captures the "img" or "dist" part to use it in the replacement.
+    # Regex to find Readymag CDN links in HTML and JS files
     rmcdn_pattern = re.compile(
-        r'(https?://[ic]-p\.rmcdn1?\.net/.*?/)(img|dist|snippets)/',
+        r'https?://[ic]-p\.rmcdn1?\.net/.*?/(img|dist|snippets)/',
         re.IGNORECASE
     )
 
     processed_files_count = 0
     fixed_files_count = 0
+    files_to_delete = []
 
     for subdir, _, files in os.walk(root_dir):
         for filename in files:
@@ -38,10 +36,14 @@ def fix_readymag_paths(root_dir):
                         # Replace the CDN part with a relative root path (e.g., /img/)
                         new_content = re.sub(
                             r'https?://[ic]-p\.rmcdn1?\.net/.*?/(img|dist|snippets)/',
-                            r'/\2/',  # Use the captured group 2 ("img", "dist", or "snippets")
+                            r'/\1/',
                             content,
                             flags=re.IGNORECASE
                         )
+                        
+                        # Handle the specific case of the importmap script
+                        importmap_pattern = r'"https://st-p.rmcdn1.net/[\w-]+\/"'
+                        new_content = re.sub(importmap_pattern, r'"/"', new_content)
 
                         # Overwrite the original file with the corrected content
                         with open(filepath, 'w', encoding='utf-8') as f:
@@ -52,6 +54,19 @@ def fix_readymag_paths(root_dir):
                 
                 except Exception as e:
                     print(f"  ❌ ERROR processing file {filepath}: {e}")
+
+            # Check for static HTML files that need to be deleted
+            if filename.endswith(('.html')) and "snippets" in subdir:
+                files_to_delete.append(filepath)
+
+    # Delete all HTML files in the snippets directory
+    print("\nStarting to delete redundant HTML files...")
+    for file_path in files_to_delete:
+        try:
+            os.remove(file_path)
+            print(f"  🗑️ Deleted redundant file: {file_path}")
+        except OSError as e:
+            print(f"  ❌ ERROR deleting file {file_path}: {e}")
 
     print(f"\nScan complete. Processed {processed_files_count} files, fixed {fixed_files_count} files.")
     print("Please inspect your files and then commit these changes to GitHub.")
