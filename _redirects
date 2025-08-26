@@ -1,1 +1,18 @@
+/projects /index.html 200
+/webdesign /index.html 200
+/graphic /index.html 200
+/about /index.html 200
+/faq /index.html 200
+
+# You will need to add more of these for all of your other pages
+/webdesign/change /index.html 200
+/webdesign/m87-melbourne /index.html 200
+/webdesign/the-village-grae /index.html 200
+/webdesign/sanctuaire /index.html 200
+/webdesign/aps /index.html 200
+/projects/3dimagemaker /index.html 200
+/projects/imagegen /index.html 200
+/projects/radio /index.html 200
+
+# This last line acts as a general fallback for any other URL
 /* /index.html 200
